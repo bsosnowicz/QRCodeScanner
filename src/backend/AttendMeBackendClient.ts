@@ -28,7 +28,7 @@ export class AttendMeBackendClient extends AttendMeBackendClientBase {
       this.deviceTokenResult = JSON.parse(rawDeviceAuthData, dateReviver)
     }
 
-    const rawUserAuthData = window.sessionStorage.getItem('attend-me:userAuthData')
+    const rawUserAuthData = window.localStorage.getItem('attend-me:userAuthData')
     if (rawUserAuthData) {
       this.userTokenResult = JSON.parse(rawUserAuthData, dateReviver)
     }
@@ -44,8 +44,7 @@ export class AttendMeBackendClient extends AttendMeBackendClientBase {
       if (!r || !r.token) throw new Error('Authorization response returned empty token!')
 
       this.userTokenResult = r
-
-      window.sessionStorage.setItem('attend-me:userAuthData', JSON.stringify(r))
+      window.localStorage.setItem('attend-me:userAuthData', JSON.stringify(r))
 
       return r
     })
@@ -53,7 +52,7 @@ export class AttendMeBackendClient extends AttendMeBackendClientBase {
 
   userLogout() {
     this.userTokenResult = undefined
-    window.sessionStorage.removeItem('attend-me:userAuthData')
+    window.localStorage.removeItem('attend-me:userAuthData')
   }
 
   userDeviceRegisterWithToken(token: string, data: DeviceRegisterDTO): Promise<TokenResult> {

@@ -84,7 +84,7 @@ router.beforeEach(async (to, _from, next) => {
     await authStore.initAuth()
   }
   
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  if (to.meta.requiresAuth && !authStore.isAuthenticated && !authStore.user) {
     next('/login')
     return
   }
