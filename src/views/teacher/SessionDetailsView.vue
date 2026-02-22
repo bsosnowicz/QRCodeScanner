@@ -61,24 +61,22 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const sessionId = ref<number>(Number(route.params.id))
+const sessionId = ref(Number(route.params.id))
 const session = ref<any>(null)
 const attendance = ref<any[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
 const scanLink = ref('')
-let refreshInterval: ReturnType<typeof setInterval> | null = null
+let refreshInterval: number | undefined
 
 onMounted(() => {
   loadData()
   generateScanLink()
-  refreshInterval = setInterval(loadAttendance, 5000)
+  refreshInterval = window.setInterval(loadAttendance, 5000)
 })
 
 onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
+  if (refreshInterval) clearInterval(refreshInterval)
 })
 
 async function loadData() {
@@ -93,7 +91,7 @@ async function loadData() {
 
     session.value = sessionData
     attendance.value = attendanceData || []
-  } catch (error: any) {
+  } catch {
     errorMessage.value = 'Błąd podczas ładowania danych'
   } finally {
     loading.value = false
@@ -104,8 +102,7 @@ async function loadAttendance() {
   try {
     const attendanceData = await Backend.courseSessionAttendanceListGet(sessionId.value)
     attendance.value = attendanceData || []
-  } catch (error) {
-    // ignoruj błędy odświeżania
+  } catch {
   }
 }
 
@@ -113,48 +110,27 @@ async function generateScanLink() {
   try {
     const tokenResult = await Backend.courseSessionAttendanceScannerTokenGet(sessionId.value)
     if (tokenResult?.token) {
-      const baseUrl = window.location.origin
-      scanLink.value = `${baseUrl}/#/teacher/scan/${sessionId.value}?token=${tokenResult.token}`
+      scanLink.value = `${window.location.origin}/#/teacher/scan/${sessionId.value}?token=${tokenResult.token}`
     }
-  } catch (error) {
-    console.error('Nie udało się wygenerować tokenu skanera')
+  } catch {
   }
 }
 
 function openScanLink() {
-  if (scanLink.value) {
-    window.open(scanLink.value, '_blank')
-  } else {
-    router.push(`/teacher/scan/${sessionId.value}`)
-  }
-}
-
-function goToDeviceRegister() {
-  router.push(`/teacher/device-register/${sessionId.value}`)
-}
-
-function refreshData() {
-  loadData()
+  scanLink.value ? window.open(scanLink.value, '_blank') : router.push(`/teacher/scan/${sessionId.value}`)
 }
 
 function formatDate(dateValue: Date | string | undefined) {
   if (!dateValue) return ''
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
-  return date.toLocaleDateString('pl-PL', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return new Date(dateValue).toLocaleDateString('pl-PL', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
   })
 }
 
-function goBack() {
-  router.push('/teacher/dashboard')
-}
-
-function handleLogout() {
+const refreshData = () => loadData()
+const goToDeviceRegister = () => router.push(`/teacher/device-register/${sessionId.value}`)
+const goBack = () => router.push('/teacher/dashboard')
+const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }

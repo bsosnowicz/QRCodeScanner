@@ -36,10 +36,7 @@ let html5QrcodeScanner: Html5Qrcode | null = null
 
 onMounted(async () => {
   const token = route.query.token as string
-  if (token) {
-    Backend.deviceTokenResult = { token }
-  }
-  
+  if (token) Backend.deviceTokenResult = { token }
   await initScanner()
 })
 
@@ -52,32 +49,22 @@ async function initScanner() {
   
   try {
     html5QrcodeScanner = new Html5Qrcode('qr-reader')
-    
     await html5QrcodeScanner.start(
       { facingMode: 'environment' },
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 }
-      },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
       onScanSuccess,
       onScanError
     )
-  } catch (error) {
-    lastResult.value = {
-      success: false,
-      message: 'Nie udało się uruchomić kamery'
-    }
+  } catch {
+    lastResult.value = { success: false, message: 'Nie udało się uruchomić kamery' }
   }
 }
 
 function onScanSuccess(decodedText: string) {
-  if (processing.value || paused.value) return
-  processCode(decodedText)
+  if (!processing.value && !paused.value) processCode(decodedText)
 }
 
-function onScanError() {
-  // normalne podczas skanowania
-}
+function onScanError() {}
 
 async function processCode(code: string) {
   if (processing.value) return
@@ -87,26 +74,13 @@ async function processCode(code: string) {
 
   try {
     const result = await Backend.courseSessionAttendanceRegister(code)
-    
-    if (result) {
-      lastResult.value = {
-        success: true,
-        message: `Obecność zarejestrowana: ${result.name || ''} ${result.surname || ''}`
-      }
-    } else {
-      lastResult.value = {
-        success: false,
-        message: 'Nie udało się zarejestrować obecności'
-      }
-    }
+    lastResult.value = result 
+      ? { success: true, message: `Obecność zarejestrowana: ${result.name} ${result.surname}` }
+      : { success: false, message: 'Nie udało się zarejestrować obecności' }
   } catch (error: any) {
-    lastResult.value = {
-      success: false,
-      message: error.message || 'Błąd podczas rejestracji obecności'
-    }
+    lastResult.value = { success: false, message: error?.message || 'Błąd podczas rejestracji obecności' }
   } finally {
     processing.value = false
-    
     setTimeout(() => {
       lastResult.value = null
       paused.value = false

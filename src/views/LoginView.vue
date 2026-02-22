@@ -52,23 +52,15 @@ async function handleLogin() {
   loading.value = true
 
   try {
-    if (Backend.userTokenResult?.token) {
-      Backend.userLogout()
-    }
-    
     await Backend.userLogin(login.value.trim(), password.value.trim())
-    
     const user = await Backend.userGet(undefined)
     authStore.setUser(user)
     
-    if (authStore.userRole === 'teacher') {
-      router.push('/teacher/dashboard')
-    } else if (authStore.userRole === 'student') {
-      router.push('/student/dashboard')
-    } else {
-      errorMessage.value = 'Nieznana rola użytkownika'
-    }
-  } catch (error: any) {
+    if (authStore.userRole === 'teacher') return router.push('/teacher/dashboard')
+    if (authStore.userRole === 'student') return router.push('/student/dashboard')
+    
+    errorMessage.value = 'Nieznana rola użytkownika'
+  } catch {
     errorMessage.value = 'Nieprawidłowy login lub hasło'
   } finally {
     loading.value = false

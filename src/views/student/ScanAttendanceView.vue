@@ -52,16 +52,14 @@ onMounted(async () => {
     
     if (result) {
       success.value = true
-      message.value = `Obecność zarejestrowana dla: ${result.name || ''} ${result.surname || ''}`
+      message.value = `Obecność zarejestrowana dla: ${result.name} ${result.surname}`
     } else {
       error.value = 'Nie udało się zarejestrować obecności'
     }
   } catch (err: any) {
-    if (err.status === 403) {
-      error.value = 'Brak uprawnień. Upewnij się, że jesteś zalogowany jako student.'
-    } else {
-      error.value = err.message || 'Błąd podczas rejestracji obecności'
-    }
+    error.value = err?.status === 403 
+      ? 'Brak uprawnień. Upewnij się, że jesteś zalogowany jako student.' 
+      : err?.message || 'Błąd podczas rejestracji obecności'
   } finally {
     loading.value = false
   }
@@ -114,4 +112,3 @@ onMounted(async () => {
   color: #333;
 }
 </style>
-

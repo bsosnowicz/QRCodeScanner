@@ -51,55 +51,44 @@ import QrcodeVue from 'qrcode.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const qrCode = ref<string>('')
+const qrCode = ref('')
 const lastAttendance = ref<any>(null)
 const hasDeviceToken = ref(false)
-let refreshInterval: ReturnType<typeof setInterval> | null = null
+let refreshInterval: number | undefined
 
 onMounted(async () => {
   hasDeviceToken.value = authStore.hasDeviceToken
-  
-  if (!hasDeviceToken.value) {
-    return
-  }
+  if (!hasDeviceToken.value) return
   
   await loadTicket()
-  refreshInterval = setInterval(() => loadTicket(), 2000)
+  refreshInterval = window.setInterval(loadTicket, 2000)
 })
 
 onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
+  if (refreshInterval) clearInterval(refreshInterval)
 })
 
 async function loadTicket() {
   try {
     const ticketResult = await Backend.userAttendanceTicketGet()
-    
     if (ticketResult?.token) {
       qrCode.value = ticketResult.token
       
-      if (ticketResult.lastRegisteredAttendance) {
-        lastAttendance.value = ticketResult.lastRegisteredAttendance
+      const extraData = ticketResult as any
+      if (extraData.lastRegisteredAttendance) {
+        lastAttendance.value = extraData.lastRegisteredAttendance
       }
     }
-  } catch (error) {
-    console.error('Błąd podczas generowania ticketu:', error)
+  } catch {
   }
 }
 
-function formatDate(dateString: string | undefined) {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleString('pl-PL')
+function formatDate(dateString?: string) {
+  return dateString ? new Date(dateString).toLocaleString('pl-PL') : ''
 }
 
-function goBack() {
-  router.push('/student/dashboard')
-}
-
-function handleLogout() {
+const goBack = () => router.push('/student/dashboard')
+const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }

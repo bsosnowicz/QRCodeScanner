@@ -66,7 +66,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const sessionId = ref<number>(Number(route.params.sessionId))
+const sessionId = ref(Number(route.params.sessionId))
 const students = ref<any[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
@@ -84,7 +84,7 @@ async function loadStudents() {
   try {
     const attendanceData = await Backend.courseSessionAttendanceListGet(sessionId.value)
     students.value = attendanceData || []
-  } catch (error: any) {
+  } catch {
     errorMessage.value = 'Błąd podczas ładowania listy studentów'
   } finally {
     loading.value = false
@@ -99,11 +99,9 @@ async function generateRegisterLink(student: any) {
   try {
     const tokenResult = await Backend.userDeviceRegisterTokenGet(student.attenderUserId)
     if (tokenResult?.token) {
-      const baseUrl = window.location.origin
-      const link = `${baseUrl}/#/device-register/${tokenResult.token}`
-      registerLinks.value[student.attenderUserId] = link
+      registerLinks.value[student.attenderUserId] = `${window.location.origin}/#/device-register/${tokenResult.token}`
     }
-  } catch (error: any) {
+  } catch {
     alert('Nie udało się wygenerować linku rejestracyjnego')
   } finally {
     loadingLink.value = null
@@ -112,13 +110,12 @@ async function generateRegisterLink(student: any) {
 
 async function copyLink(link: string) {
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+    if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(link)
       alert('Link skopiowany do schowka')
       return
     }
-  } catch (error) {
-  }
+  } catch {}
 
   try {
     const textarea = document.createElement('textarea')
@@ -133,18 +130,15 @@ async function copyLink(link: string) {
     if (successful) {
       alert('Link skopiowany do schowka')
     } else {
-      throw new Error('execCommand failed')
+      throw new Error('Fallback failed')
     }
-  } catch (error) {
+  } catch {
     prompt('Skopiuj ten link (Ctrl+C):', link)
   }
 }
 
-function goBack() {
-  router.push(`/teacher/session/${sessionId.value}`)
-}
-
-function handleLogout() {
+const goBack = () => router.push(`/teacher/session/${sessionId.value}`)
+const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }
@@ -221,6 +215,3 @@ function handleLogout() {
   color: #666;
 }
 </style>
-
-
-

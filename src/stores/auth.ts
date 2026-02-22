@@ -6,18 +6,18 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<any>(null)
   const userRole = ref<string | null>(null)
 
-  const isAuthenticated = computed(() => Backend.userTokenResult?.token != null)
-  const hasDeviceToken = computed(() => Backend.deviceTokenResult?.token != null)
+  const isAuthenticated = computed(() => !!Backend.userTokenResult?.token)
+  const hasDeviceToken = computed(() => !!Backend.deviceTokenResult?.token)
 
   async function initAuth() {
-    if (Backend.userTokenResult?.token) {
-      try {
-        const userData = await Backend.userGet(undefined)
-        setUser(userData)
-      } catch (error: any) {
-        if (error.status === 401 || error.status === 400 || error.status === 403) {
-          logout()
-        }
+    if (!Backend.userTokenResult?.token) return
+
+    try {
+      const userData = await Backend.userGet(undefined)
+      setUser(userData)
+    } catch (error: any) {
+      if ([400, 401, 403].includes(error?.status)) {
+        logout()
       }
     }
   }
@@ -25,15 +25,10 @@ export const useAuthStore = defineStore('auth', () => {
   function setUser(userData: any) {
     user.value = userData
     
-    if (userData?.isTeacher) {
-      userRole.value = 'teacher'
-    } else if (userData?.isStudent) {
-      userRole.value = 'student'
-    } else if (userData?.isAdmin) {
-      userRole.value = 'admin'
-    } else {
-      userRole.value = null
-    }
+    if (userData?.isTeacher) userRole.value = 'teacher'
+    else if (userData?.isStudent) userRole.value = 'student'
+    else if (userData?.isAdmin) userRole.value = 'admin'
+    else userRole.value = null
   }
 
   function logout() {

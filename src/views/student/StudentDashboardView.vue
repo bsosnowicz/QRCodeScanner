@@ -68,40 +68,29 @@ const dateFilter = ref('all')
 const textFilter = ref('')
 
 const filteredSessions = computed(() => {
-  let filtered = [...sessions.value]
+  let filtered = sessions.value
 
   if (dateFilter.value !== 'all') {
     const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    const tomorrowTime = todayTime + 86400000 
+    const nextWeekTime = todayTime + 7 * 86400000 
     
     filtered = filtered.filter(session => {
-      const sessionDate = new Date(session.dateStart)
-      const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate())
+      const sDate = new Date(session.dateStart)
+      const sessionTime = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).getTime()
       
-      switch (dateFilter.value) {
-        case 'today':
-          return sessionDay.getTime() === today.getTime()
-        case 'tomorrow':
-          const tomorrow = new Date(today)
-          tomorrow.setDate(tomorrow.getDate() + 1)
-          return sessionDay.getTime() === tomorrow.getTime()
-        case 'nextWeek':
-          const nextWeek = new Date(today)
-          nextWeek.setDate(nextWeek.getDate() + 7)
-          return sessionDay >= today && sessionDay <= nextWeek
-        case 'past':
-          return sessionDay < today
-        default:
-          return true
-      }
+      if (dateFilter.value === 'today') return sessionTime === todayTime
+      if (dateFilter.value === 'tomorrow') return sessionTime === tomorrowTime
+      if (dateFilter.value === 'nextWeek') return sessionTime >= todayTime && sessionTime <= nextWeekTime
+      if (dateFilter.value === 'past') return sessionTime < todayTime
+      return true
     })
   }
 
   if (textFilter.value) {
     const searchLower = textFilter.value.toLowerCase()
-    filtered = filtered.filter(session => 
-      session.courseName?.toLowerCase().includes(searchLower)
-    )
+    filtered = filtered.filter(session => session.courseName?.toLowerCase().includes(searchLower))
   }
 
   return filtered
@@ -120,23 +109,18 @@ async function loadSessions() {
   errorMessage.value = ''
 
   try {
-    const response = await Backend.courseStudentSessionsGet({
-      pageNumber: 1,
-      pageSize: 999999
-    })
-    
-    sessions.value = response?.items || []
-  } catch (error: any) {
+    const response = await Backend.courseStudentSessionsGet({ pageNumber: 1, pageSize: 999999 })
+    sessions.value = response.items
+  } catch {
     errorMessage.value = 'Błąd podczas ładowania zajęć'
   } finally {
     loading.value = false
   }
 }
 
-function formatDate(dateValue: Date | string | undefined) {
+function formatDate(dateValue: string | Date) {
   if (!dateValue) return ''
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
-  return date.toLocaleDateString('pl-PL', {
+  return new Date(dateValue).toLocaleDateString('pl-PL', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -146,15 +130,9 @@ function formatDate(dateValue: Date | string | undefined) {
   })
 }
 
-function goToSession(session: any) {
-  router.push(`/student/session/${session.courseGroupId}`)
-}
-
-function goToAttendance() {
-  router.push('/student/attendance')
-}
-
-function handleLogout() {
+const goToSession = (session: any) => router.push(`/student/session/${session.courseGroupId}`)
+const goToAttendance = () => router.push('/student/attendance')
+const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }

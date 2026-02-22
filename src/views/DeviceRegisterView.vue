@@ -63,7 +63,7 @@ import { Backend } from '@/backend/AttendMeBackendClient'
 const route = useRoute()
 const router = useRouter()
 
-const token = ref<string>('')
+const token = ref('')
 const deviceName = ref('')
 const studentName = ref('')
 const studentSurname = ref('')
@@ -73,12 +73,9 @@ const loading = ref(false)
 const success = ref(false)
 
 onMounted(() => {
-  const tokenParam = (route.params.token as string) || (route.query.token as string)
-  if (tokenParam) {
-    token.value = tokenParam
-  } else {
-    errorMessage.value = 'Brak tokenu rejestracyjnego'
-  }
+  const tokenParam = String(route.params.token || route.query.token || '')
+  if (tokenParam) token.value = tokenParam
+  else errorMessage.value = 'Brak tokenu rejestracyjnego'
 })
 
 async function handleRegister() {
@@ -91,13 +88,13 @@ async function handleRegister() {
     return
   }
 
-  try {
-    if (!albumIdNumber.value || albumIdNumber.value <= 0) {
-      errorMessage.value = 'Numer albumu jest wymagany i musi być liczbą dodatnią'
-      loading.value = false
-      return
-    }
+  if (!albumIdNumber.value || albumIdNumber.value <= 0) {
+    errorMessage.value = 'Numer albumu jest wymagany i musi być liczbą dodatnią'
+    loading.value = false
+    return
+  }
 
+  try {
     await Backend.userDeviceRegisterWithToken(token.value, {
       deviceName: deviceName.value,
       studentName: studentName.value,
@@ -106,16 +103,14 @@ async function handleRegister() {
     })
     
     success.value = true
-    setTimeout(() => {
-      router.push('/login')
-    }, 2000)
+    setTimeout(() => router.push('/login'), 2000)
   } catch (error: any) {
-    if (error.status === 403) {
+    if (error?.status === 403) {
       errorMessage.value = 'Brak uprawnień. Token może być nieprawidłowy lub wygasł. Skontaktuj się z wykładowcą.'
-    } else if (error.status === 400) {
+    } else if (error?.status === 400) {
       errorMessage.value = 'Nieprawidłowe dane. Sprawdź wszystkie pola formularza.'
     } else {
-      errorMessage.value = error.message || 'Błąd rejestracji urządzenia'
+      errorMessage.value = error?.message || 'Błąd rejestracji urządzenia'
     }
   } finally {
     loading.value = false

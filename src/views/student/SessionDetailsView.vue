@@ -70,25 +70,20 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const courseGroupId = ref<number>(Number(route.params.id))
+const courseGroupId = ref(Number(route.params.id))
 const allSessions = ref<any[]>([])
 const attendanceLogs = ref<any[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
 
-const courseName = computed(() => allSessions.value[0]?.courseName || '')
-const groupName = computed(() => allSessions.value[0]?.courseGroupName || '')
+const courseName = computed(() => allSessions.value[0]?.courseName)
+const groupName = computed(() => allSessions.value[0]?.courseGroupName)
 
 const totalSessions = computed(() => allSessions.value.length)
 const attendedSessions = computed(() => attendanceLogs.value.length)
-const attendancePercentage = computed(() => {
-  if (totalSessions.value === 0) return 0
-  return Math.round((attendedSessions.value / totalSessions.value) * 100)
-})
+const attendancePercentage = computed(() => totalSessions.value ? Math.round((attendedSessions.value / totalSessions.value) * 100) : 0)
 
-onMounted(() => {
-  loadData()
-})
+onMounted(loadData)
 
 async function loadData() {
   loading.value = true
@@ -100,28 +95,24 @@ async function loadData() {
       Backend.courseStudentAttendanceGet(courseGroupId.value)
     ])
     
-    allSessions.value = sessionsData || []
-    attendanceLogs.value = attendanceData || []
-  } catch (error: any) {
+    allSessions.value = sessionsData
+    attendanceLogs.value = attendanceData
+  } catch {
     errorMessage.value = 'Błąd podczas ładowania danych'
   } finally {
     loading.value = false
   }
 }
 
-function isPresent(sessionId: number | undefined): boolean {
-  if (!sessionId) return false
-  return attendanceLogs.value.some(log => log.courseSessionId === sessionId)
+function isPresent(sessionId?: number) {
+  return sessionId ? attendanceLogs.value.some(log => log.courseSessionId === sessionId) : false
 }
 
-function refreshData() {
-  loadData()
-}
+const refreshData = () => loadData()
 
-function formatDate(dateValue: Date | string | undefined) {
+function formatDate(dateValue: string | Date) {
   if (!dateValue) return ''
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
-  return date.toLocaleDateString('pl-PL', {
+  return new Date(dateValue).toLocaleDateString('pl-PL', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -131,15 +122,9 @@ function formatDate(dateValue: Date | string | undefined) {
   })
 }
 
-function goBack() {
-  router.push('/student/dashboard')
-}
-
-function goToAttendance() {
-  router.push('/student/attendance')
-}
-
-function handleLogout() {
+const goBack = () => router.push('/student/dashboard')
+const goToAttendance = () => router.push('/student/attendance')
+const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }

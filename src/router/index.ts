@@ -84,20 +84,14 @@ router.beforeEach(async (to, _from, next) => {
     await authStore.initAuth()
   }
   
-  if (to.meta.requiresAuth && !authStore.isAuthenticated && !authStore.user) {
-    next('/login')
-    return
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return next('/login')
   }
   
   if (to.meta.role && authStore.userRole !== to.meta.role) {
-    if (authStore.userRole === 'teacher') {
-      next('/teacher/dashboard')
-    } else if (authStore.userRole === 'student') {
-      next('/student/dashboard')
-    } else {
-      next('/login')
-    }
-    return
+    if (authStore.userRole === 'teacher') return next('/teacher/dashboard')
+    if (authStore.userRole === 'student') return next('/student/dashboard')
+    return next('/login')
   }
   
   next()

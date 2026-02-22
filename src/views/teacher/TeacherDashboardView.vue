@@ -66,32 +66,23 @@ const dateFilter = ref('all')
 const textFilter = ref('')
 
 const filteredSessions = computed(() => {
-  let filtered = [...sessions.value]
+  let filtered = sessions.value
 
   if (dateFilter.value !== 'all') {
     const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    
+    const todayTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    const tomorrowTime = todayTime + 86400000
+    const nextWeekTime = todayTime + 7 * 86400000
+
     filtered = filtered.filter(session => {
-      const sessionDate = new Date(session.dateStart)
-      const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate())
+      const sDate = new Date(session.dateStart)
+      const sessionTime = new Date(sDate.getFullYear(), sDate.getMonth(), sDate.getDate()).getTime()
       
-      switch (dateFilter.value) {
-        case 'today':
-          return sessionDay.getTime() === today.getTime()
-        case 'tomorrow':
-          const tomorrow = new Date(today)
-          tomorrow.setDate(tomorrow.getDate() + 1)
-          return sessionDay.getTime() === tomorrow.getTime()
-        case 'nextWeek':
-          const nextWeek = new Date(today)
-          nextWeek.setDate(nextWeek.getDate() + 7)
-          return sessionDay >= today && sessionDay <= nextWeek
-        case 'past':
-          return sessionDay < today
-        default:
-          return true
-      }
+      if (dateFilter.value === 'today') return sessionTime === todayTime
+      if (dateFilter.value === 'tomorrow') return sessionTime === tomorrowTime
+      if (dateFilter.value === 'nextWeek') return sessionTime >= todayTime && sessionTime <= nextWeekTime
+      if (dateFilter.value === 'past') return sessionTime < todayTime
+      return true
     })
   }
 
@@ -115,13 +106,9 @@ async function loadSessions() {
   errorMessage.value = ''
 
   try {
-    const response = await Backend.courseTeacherSessionsGet({
-      pageNumber: 1,
-      pageSize: 999999
-    })
-    
+    const response = await Backend.courseTeacherSessionsGet({ pageNumber: 1, pageSize: 999999 })
     sessions.value = response?.items || []
-  } catch (error: any) {
+  } catch {
     errorMessage.value = 'Błąd podczas ładowania zajęć'
   } finally {
     loading.value = false
@@ -130,24 +117,16 @@ async function loadSessions() {
 
 function formatDate(dateValue: Date | string | undefined) {
   if (!dateValue) return ''
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
-  return date.toLocaleDateString('pl-PL', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return new Date(dateValue).toLocaleDateString('pl-PL', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
   })
 }
 
-function goToSession(sessionId: number | undefined) {
-  if (sessionId) {
-    router.push(`/teacher/session/${sessionId}`)
-  }
+const goToSession = (sessionId?: number) => {
+  if (sessionId) router.push(`/teacher/session/${sessionId}`)
 }
 
-function handleLogout() {
+const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }

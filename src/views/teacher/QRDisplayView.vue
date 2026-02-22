@@ -30,21 +30,19 @@ import { Backend } from '@/backend/AttendMeBackendClient'
 import QrcodeVue from 'qrcode.vue'
 
 const route = useRoute()
-const qrCode = ref<string>('')
-let refreshInterval: ReturnType<typeof setInterval> | null = null
+const qrCode = ref('')
+let refreshInterval: number | undefined
 
 onMounted(async () => {
   const sessionId = Number(route.params.sessionId)
   if (sessionId) {
     await loadQRCode(sessionId)
-    refreshInterval = setInterval(() => loadQRCode(sessionId), 30000)
+    refreshInterval = window.setInterval(() => loadQRCode(sessionId), 30000)
   }
 })
 
 onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
+  if (refreshInterval) clearInterval(refreshInterval)
 })
 
 async function loadQRCode(sessionId: number) {
@@ -54,8 +52,7 @@ async function loadQRCode(sessionId: number) {
       const baseUrl = window.location.origin
       qrCode.value = `${baseUrl}/#/student/scan-attendance?token=${tokenResult.token}&sessionId=${sessionId}`
     }
-  } catch (error) {
-    console.error('Błąd podczas generowania kodu QR:', error)
+  } catch {
   }
 }
 </script>
@@ -115,4 +112,3 @@ async function loadQRCode(sessionId: number) {
   font-size: 18px;
 }
 </style>
-
