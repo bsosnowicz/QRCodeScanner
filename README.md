@@ -2,6 +2,11 @@
 
 Aplikacja SPA do sprawdzania obecności na zajęciach z wykorzystaniem kodów QR.
 
+### Kluczowe uwagi
+- Czasem występuje błąd, który powoduje błąd przy zalogowaniu mimo wprowadzenia poprwanych danych (nie wyskakuje żaden błąd). W takiej sytuacji należy przeładować stronę i zalogować się jeszcze raz, wtedy powinno wszystko działać
+- Sam projekt wrzucilismy również na hosting netlify:
+https://aquamarine-clafoutis-71a644.netlify.app/#/login
+
 ## Technologie
 
 - Vue.js 3 (Composition API)
@@ -14,23 +19,17 @@ Aplikacja SPA do sprawdzania obecności na zajęciach z wykorzystaniem kodów QR
 
 ## Instalacja
 
-```bash
 npm install
-```
 
 ## Uruchomienie
 
-```bash
 npm run dev
-```
 
 Aplikacja będzie dostępna pod adresem `http://localhost:3000`
 
 ## Budowanie
 
-```bash
 npm run build
-```
 
 ## Funkcjonalności
 
@@ -46,11 +45,3 @@ npm run build
 - Pulpit z listą zajęć (filtrowanie)
 - Szczegóły zajęć z frekwencją
 - Generowanie kodu QR do obecności
-
-## Backend
-
-Backend aplikacji dostępny jest pod adresem:
-https://attendme-backend.runasp.net/
-
-Dokumentacja API: https://attendme-backend.runasp.net/swagger/index.html
-

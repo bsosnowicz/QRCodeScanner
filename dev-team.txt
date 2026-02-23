@@ -1,0 +1,16 @@
+Grzegorz Siwek 15011
+Bartosz Sosnowicz 15211
+
+Bartosz Sosnowicz
+Backend API - stworzenie klienta komunikacji z backendem
+Autentykacja - implementacja logowania, zarządzanie tokenami użytkownika i urządzenia (auth.ts)
+Rejestracja urządzeń - widok do rejestracji urządzenia studenta przez link aktywacyjny
+Routing - konfiguracja tras, guards, przekierowania
+Setup projektu - konfiguracja Vue, Vite, TypeScript
+
+
+Grzegorz Siwek
+Logowanie - widok i obsługa formularza logowania
+Moduł wykładowcy - dashboard, szczegóły zajęć, skanowanie QR, wyświetlanie QR, lista urządzeń
+Moduł studenta - dashboard, szczegóły zajęć, historia obecności, generowanie QR
+Style CSS - ogólne stylowanie aplikacji
